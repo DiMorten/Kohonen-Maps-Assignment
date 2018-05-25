@@ -6,21 +6,51 @@ clc
 in_filename='../data/new-thyroid.data';
 %sD = som_read_data(in_filename);
 sD = som_read_data(in_filename);
-
 conf=struct();
-conf.size=[10 15];
+
+%conf.mode='auto';
+% BEST SO FAR
+
+conf.mode='auto';
+conf.mode='manual';
+
+conf.msize=[12 6];
+%conf.msize=[12 1];
+
 conf.type='hexa';
+conf.radius=[6 1];
+conf.trainlen=100;
+conf.alpha_ini=0.5;
+% SEARCH BEGINS
 
 %%
 
 sD = som_normalize(sD,'range');
-sM = som_make(sD);
+if isequal(conf.mode,'auto')
+    sM = som_make(sD,'tracking',4,'radius',conf.radius);  %Batch training method
+else
+    %sM = som_randinit(sD,'msize',conf.msize);
+    sM = som_lininit(sD,'msize',conf.msize);
+    
+    %sM.
+    sM = som_seqtrain(sM,sD,'radius',conf.radius, ...
+        'msize',conf.msize,'trainlen',conf.trainlen,...
+        'trainlen_type','epochs',...
+        'lattice','hexa', ...
+        'alpha_ini', conf.alpha_ini, ...
+        'tracking',2);
+    [e1,e2,e3]=som_quality(sM,sD);
+    fprintf('Final quantization error: %5.3f\n',e1)
+    fprintf('Final topographic error:  %5.3f\n',e2)
+    fprintf('Final combined error:  %5.3f\n',e3)  
+    
+end
 sM = som_autolabel(sM,sD,'vote'); %The best matching unit of each sample is found. The label is given to the map unit.
 figure(2)
 colormap(1-gray)
 som_show(sM,'norm','d') %shows map without classes
 
-
+%%
 % % 
 % figure(3)
 % colormap(1-gray)
