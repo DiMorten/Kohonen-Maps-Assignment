@@ -64,3 +64,6 @@ Original_data/
 doc/
 somtoolbox/
 *.ZIP
+SOM-Toolbox-master/
+somtoolbox_old/
+*.m~
