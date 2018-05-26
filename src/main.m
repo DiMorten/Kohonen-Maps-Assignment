@@ -12,38 +12,47 @@ conf=struct();
 % BEST SO FAR
 
 conf.mode='auto';
-conf.mode='manual';
+conf.mode='auto';
 
 conf.msize=[12 6];
-%conf.msize=[12 1];
-
-conf.type='hexa';
+conf.lattice='hexa';
 conf.radius=[6 1];
 conf.trainlen=100;
 conf.alpha_ini=0.5;
 % SEARCH BEGINS
+conf.lattice='hexa';
 
 %%
 
 sD = som_normalize(sD,'range');
 if isequal(conf.mode,'auto')
-    sM = som_make(sD,'tracking',4,'radius',conf.radius);  %Batch training method
+    sM = som_make(sD);  %Batch training method
 else
     %sM = som_randinit(sD,'msize',conf.msize);
     sM = som_lininit(sD,'msize',conf.msize);
     
     %sM.
-    sM = som_seqtrain(sM,sD,'radius',conf.radius, ...
+    %sM = som_seqtrain(sM,sD,'radius',conf.radius, ...
+    sM = som_batchtrain(sM,sD,'radius',conf.radius, ...
         'msize',conf.msize,'trainlen',conf.trainlen,...
         'trainlen_type','epochs',...
-        'lattice','hexa', ...
+        'lattice',conf.lattice, ...
         'alpha_ini', conf.alpha_ini, ...
-        'tracking',2);
+        'tracking',0);
     [e1,e2,e3]=som_quality(sM,sD);
     fprintf('Final quantization error: %5.3f\n',e1)
     fprintf('Final topographic error:  %5.3f\n',e2)
     fprintf('Final combined error:  %5.3f\n',e3)  
-    
+    sM = som_batchtrain(sM,sD,'radius',conf.radius, ...
+        'msize',conf.msize,'trainlen',conf.trainlen,...
+        'trainlen_type','epochs',...
+        'lattice',conf.lattice, ...
+        'alpha_ini', 0.05, ...
+        'tracking',0);
+    [e1,e2,e3]=som_quality(sM,sD);
+    fprintf('Final quantization error: %5.3f\n',e1)
+    fprintf('Final topographic error:  %5.3f\n',e2)
+    fprintf('Final combined error:  %5.3f\n',e3)  
 end
 sM = som_autolabel(sM,sD,'vote'); %The best matching unit of each sample is found. The label is given to the map unit.
 figure(2)
