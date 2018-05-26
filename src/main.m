@@ -30,6 +30,8 @@ conf.lattice='hexa';
 
 conf.dlen=size(sD.data,1);
 conf.algorithm='batch';
+
+conf.plot=0;
 %%
 
 sD = som_normalize(sD,'range');
@@ -74,9 +76,16 @@ else
     fprintf('Final combined error:  %5.3f\n',e3)  
 end
 sM = som_autolabel(sM,sD,'vote'); %The best matching unit of each sample is found. The label is given to the map unit.
-figure(2)
-colormap(1-gray)
-som_show(sM,'norm','d') %shows map without classes
+
+if conf.plot==1
+    figure(2)
+    colormap(1-gray)
+    som_show(sM,'norm','d') %shows map without classes
+
+    figure(3)
+    som_show(sM,'umat','all','empty','Labels')
+    som_show_add('label',sM,'Textsize',8,'TextColor','r','Subplot',2)
+end
 
 %%
 % % 
@@ -84,9 +93,6 @@ som_show(sM,'norm','d') %shows map without classes
 % colormap(1-gray)
 % som_show(sMap,'norm','d')
 
-figure(3)
-som_show(sM,'umat','all','empty','Labels')
-som_show_add('label',sM,'Textsize',8,'TextColor','r','Subplot',2)
 
 %sMap  = som_seqtrain(sMap,sD.data,'radius',[5 1],'trainlen',10);
 %som_show(sM,'umat','all','comp',1:4,'empty','Labels','norm','d');
