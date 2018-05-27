@@ -2,6 +2,8 @@
 
 close all
 clc
+clear all
+
 addpath(genpath('/home/jorg/Documents/Master/scnd_semester/neural_nets/homework2/repo/src/plotSpread'))
 addpath(genpath('SOM-Toolbox-master'));
 in_filename='../data/new-thyroid.data';
@@ -26,75 +28,52 @@ conf.rough.trainlen=2;
 conf.finet.trainlen=6;
 conf.shape='sheet';
 %conf.shape='cyl';
-
+conf.normalization='range';
 % SEARCH BEGINS
 conf.lattice='hexa';
 %conf.lattice='rect';
 
 conf.dlen=size(sD.data,1);
-conf.algorithm='batch';
+%conf.algorithm='batch';
 
 conf.plot=0;
 conf.manytimes.times=100;
 conf.manytimes.e=struct();
 conf.manytimes.e.v=zeros(conf.manytimes.times,3);
 %
-conf.exp_id=1;
-result=struct();
+conf.exp_id=4;
+results=struct();
 
-if conf.exp_id==1
-    %conf.exp_data=[1]
-    %conf.exp_len=length(conf.exp_data);
-    conf.exp_len=6;
-    result.v=zeros(3,conf.exp_len);
+if conf.exp_id==4 % Normalization
+    %conf.exp_data=[1,2]
+    conf.exp_data={'var','range','log','logistic','histD','histC'};
+    conf.exp_len=length(conf.exp_data);
+    %conf.exp_len=1;
+    results.v=zeros(conf.exp_len,3);
 
 end
-%conf.manytimes.e.e1=struct();conf.manytimes.e.e2=struct();conf.manytimes.e.e3=struct();
-%conf.manytimes.e.e1.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e2.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e3.v=zeros(1,conf.manytimes.times);
-
-%conf.manytimes.e.e1.mean=mean(conf.manytimes.e.e1.v);
-%conf.manytimes.e.e2.mean=mean(conf.manytimes.e.e2.v);
-%conf.manytimes.e.e3.mean=mean(conf.manytimes.e.e3.v);
-count=0;
-for i=1:2
-    for k=1:3
-        count=count+1;
-        if i==1, conf.lattice='hexa'; else, conf.lattice='rect'; end
-        
-        if k==1, conf.shape='sheet'; 
-        elseif k==2, conf.shape='cyl'; 
-        elseif k==3, conf.shape='toroid'; 
-        end
-         
-        %hexa:sheet,cyl,toroid,rect:sheet,cyl,toroid
-        
-        [sD,sM,conf] = som_train_many(sD,conf);
-        results.v(:,count)=conf.manytimes.e.min;
-        results.e1(i,k)=conf.manytimes.e.min(1,1);
-        results.e2(i,k)=conf.manytimes.e.min(1,2);
-        results.e3(i,k)=conf.manytimes.e.min(1,3);
-        
-        results.lattice(:,count)=i;
-        results.shape(:,count)=k;
-        
+results.exp_data=conf.exp_data;
+% 
+% %conf.manytimes.e.e1=struct();conf.manytimes.e.e2=struct();conf.manytimes.e.e3=struct();
+% %conf.manytimes.e.e1.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e2.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e3.v=zeros(1,conf.manytimes.times);
+% 
+% %conf.manytimes.e.e1.mean=mean(conf.manytimes.e.e1.v);
+% %conf.manytimes.e.e2.mean=mean(conf.manytimes.e.e2.v);
+% %conf.manytimes.e.e3.mean=mean(conf.manytimes.e.e3.v);
+% count=0;
+for i=1:conf.exp_len
+    if conf.exp_id==4
+        conf.normalization=conf.exp_data{i};
     end
+    [sD,sM,conf] = som_train_many(sD,conf);
+    results.v(i,:)=conf.manytimes.e.min;
+        
 end
-% figure,subplot(1,3,1),mesh(results.e1);
-% subplot(1,3,2),mesh(results.e2);
-% subplot(1,3,3),mesh(results.e3);
-%%
-catsx={'hexa','rect'};
-catsy={'sheet','cyl','toroid'};
-z=results.e3';
-mesh3d(catsx,catsy,z,1);hold on;
-xlabel('Lattice')
-ylabel('Shape')
-zlabel('Combined Error')
-%%
-figure,scatter3(results.lattice,results.shape,results.v(1,:))
 
 %%
-function [sD,sM,result] = som_train_topology(sM,sD,conf,result)
+%Use: [sD,sM,results] = som_train_topology(sD,conf,results)
+
+function [sD,sM,results] = som_train_topology(sD,conf,results)
 
 
 %conf.manytimes.e.e1=struct();conf.manytimes.e.e2=struct();conf.manytimes.e.e3=struct();
@@ -117,7 +96,7 @@ for i=1:2
         %hexa:sheet,cyl,toroid,rect:sheet,cyl,toroid
         
         [sD,sM,conf] = som_train_many(sD,conf);
-        results.v(:,count)=conf.manytimes.e.min;
+        results.v(count,:)=conf.manytimes.e.min;
         results.e1(i,k)=conf.manytimes.e.min(1,1);
         results.e2(i,k)=conf.manytimes.e.min(1,2);
         results.e3(i,k)=conf.manytimes.e.min(1,3);
@@ -173,7 +152,7 @@ end
 end
 %%
 function [sD,sM,e] = som_train_once(sD,conf)
-sD = som_normalize(sD,'range');
+sD = som_normalize(sD,conf.normalization);
 if isequal(conf.mode,'auto')
     sM = som_make(sD);  %Batch training method
 else
