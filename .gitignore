@@ -68,3 +68,4 @@ SOM-Toolbox-master/
 somtoolbox_old/
 *.m~
 *.mat
+*.svg

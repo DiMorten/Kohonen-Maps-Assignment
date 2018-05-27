@@ -4,15 +4,15 @@ close all
 clc
 clear all
 
+% ================= Read Data ================================
 addpath(genpath('/home/jorg/Documents/Master/scnd_semester/neural_nets/homework2/repo/src/plotSpread'))
 addpath(genpath('SOM-Toolbox-master'));
 in_filename='../data/new-thyroid.data';
 %sD = som_read_data(in_filename);
 sD = som_read_data(in_filename);
-conf=struct();
 
-%conf.mode='auto';
-% BEST SO FAR
+% ================ Default Configuration ====================
+conf=struct();
 
 %conf.mode='auto';
 conf.mode='manual';
@@ -28,7 +28,7 @@ conf.rough.trainlen=2;
 conf.finet.trainlen=6;
 conf.shape='sheet';
 %conf.shape='cyl';
-conf.normalization='range';
+conf.normalization='log';
 % SEARCH BEGINS
 conf.lattice='hexa';
 %conf.lattice='rect';
@@ -40,30 +40,29 @@ conf.plot=0;
 conf.manytimes.times=100;
 conf.manytimes.e=struct();
 conf.manytimes.e.v=zeros(conf.manytimes.times,3);
-%
-conf.exp_id=4;
 results=struct();
 
-if conf.exp_id==4 % Normalization
-    %conf.exp_data=[1,2]
+% ============ Select Experiment ID ====================
+conf.exp_id=5;
+% ============ Configure Experiment ====================
+if conf.exp_id==3 % Topology
+    [sD,sM,results] = som_train_topology(sD,conf,results);
+elseif conf.exp_id==4 % Normalization
     conf.exp_data={'var','range','log','logistic','histD','histC'};
-    conf.exp_len=length(conf.exp_data);
-    %conf.exp_len=1;
-    results.v=zeros(conf.exp_len,3);
-
+elseif conf.exp_id==5 % Rough train length
+    conf.exp_data=[1,2,3,4,6,20];
 end
+conf.exp_len=length(conf.exp_data);
+results.v=zeros(conf.exp_len,3);
 results.exp_data=conf.exp_data;
-% 
-% %conf.manytimes.e.e1=struct();conf.manytimes.e.e2=struct();conf.manytimes.e.e3=struct();
-% %conf.manytimes.e.e1.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e2.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e3.v=zeros(1,conf.manytimes.times);
-% 
-% %conf.manytimes.e.e1.mean=mean(conf.manytimes.e.e1.v);
-% %conf.manytimes.e.e2.mean=mean(conf.manytimes.e.e2.v);
-% %conf.manytimes.e.e3.mean=mean(conf.manytimes.e.e3.v);
-% count=0;
+
+% ============ Execute Experiment ====================
+
 for i=1:conf.exp_len
     if conf.exp_id==4
-        conf.normalization=conf.exp_data{i};
+        conf.normalization=conf.exp_data{i}
+    elseif conf.exp_id==5
+        conf.rough.trainlen=conf.exp_data(i)
     end
     [sD,sM,conf] = som_train_many(sD,conf);
     results.v(i,:)=conf.manytimes.e.min;
@@ -72,16 +71,8 @@ end
 
 %%
 %Use: [sD,sM,results] = som_train_topology(sD,conf,results)
-
 function [sD,sM,results] = som_train_topology(sD,conf,results)
 
-
-%conf.manytimes.e.e1=struct();conf.manytimes.e.e2=struct();conf.manytimes.e.e3=struct();
-%conf.manytimes.e.e1.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e2.v=zeros(1,conf.manytimes.times);conf.manytimes.e.e3.v=zeros(1,conf.manytimes.times);
-
-%conf.manytimes.e.e1.mean=mean(conf.manytimes.e.e1.v);
-%conf.manytimes.e.e2.mean=mean(conf.manytimes.e.e2.v);
-%conf.manytimes.e.e3.mean=mean(conf.manytimes.e.e3.v);
 count=0;
 for i=1:2
     for k=1:3
@@ -117,6 +108,13 @@ mesh3d(catsx,catsy,z,1);hold on;
 xlabel('Lattice')
 ylabel('Shape')
 zlabel('Combined Error')
+figure();bar3(z)
+xlabel('Lattice')
+ylabel('Shape')
+zlabel('Combined Error')
+set(gca, 'XTickLabel', catsx)
+set(gca, 'YTickLabel', catsy)
+zlim([0.17,0.185])
 end
 %%
 function mesh3d(catsx,catsy,z,categorical_flag)
@@ -211,10 +209,8 @@ end
 % colormap(1-gray)
 % som_show(sMap,'norm','d')
 
-
 %sMap  = som_seqtrain(sMap,sD.data,'radius',[5 1],'trainlen',10);
 %som_show(sM,'umat','all','comp',1:4,'empty','Labels','norm','d');
-
 
 %%
 f=struct();
